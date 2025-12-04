@@ -254,15 +254,36 @@ def search_dangle(matching_commits, repo, search_term, search_by, found):
 
 
 
-if __name__ == "__main__":
-
+def main_function():
 
     parser = argparse.ArgumentParser(
-                    prog='ProgramName',
-                    description='What the program does',
-                    epilog='Text at the bottom of help')
+                    prog='gitgrind',
+                    description='searches one or more repos for commits based on file content, author, commit msg',
+                    epilog="""
+
+Commit context variables:
+=========================
+author - author name
+email - author email
+message - full commit message
+files - array of filenames touched
+
+Example:
+========
+'message': commit.message.lower(),
+'author': commit.author.name.lower(),
+'email': commit.author.email.lower(),
+        'files': [x for x in diff_files(diff)]
+
+gitgrind -r * --condition "'username' in author and 'some feature' in message"
+
+
+""")
     parser.add_argument('type')      # positional argument
     parser.add_argument('value')
+
+    parser.add_argument("-c", "--condition", help="quoted python condition statement using commit context variables")
+    parser.add_argument("-r", "--recursive", action="store_true", help="search subdirectories for repositories" )
     parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
     parser.add_argument("-b", "--batch", action="store_true", help="show commit changes (diffs)")
     parser.add_argument("-d", "--details", action="store_true", help="show commit changes (diffs)")
