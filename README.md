@@ -10,5 +10,18 @@ This project attemts to consolidate several techniques for seeking out changes i
 
 Details
 =======
+This tool will search the current repo, or many repos, for text in files, commit messages, authors or commit messages.
+The tool uses a standard python conditional to qualify the search using these variables:
 
+message - full contents of message converted to lower case
+author - author converted to lower case
+email - author's email address converted to lower case
+files - list of files in the commit
+
+Usage
+-----
+Example of search in current directroy
+gitgrind -f "('myname' in author or 'myname' in email) and 'mydir/myfile.cpp' in files" 
+
+This will find any commits (dangling, in stash, or normal commits) and show the commit information
 
