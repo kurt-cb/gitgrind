@@ -29,4 +29,4 @@ class TestGitGrind(unittest.TestCase):
         
     def test_repo(self):
         repo = pygit2.Repository('.')
-        logging.info(list(repo.references))
+        logging.info("References: %s", list(repo.references))
