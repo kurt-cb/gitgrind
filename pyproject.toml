@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "my-awesome-package"
+name = "gitgrind"
 version = "0.1.0"
-description = "A short description of my awesome package."
+description = "find files and commits in multiple repos, stashes, dangling commits."
 readme = "README.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
@@ -21,14 +21,17 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+ "pygit2>=1.18.2"
+]
+[project.scripts]
+    gitgrind = "gitgrind.main:main_function"
 
 [project.urls]
 Homepage = "https://github.com/kurt-cb/gitgrind/"
 Documentation = "https://gitgrind.readthedocs.io/"
 Repository = "https://github.com/kurt-cb/gitgrind"
 
-[project.dependencies]
-pygit2 = ">=1.18.2"
 
 [project.optional-dependencies]
 dev = [
