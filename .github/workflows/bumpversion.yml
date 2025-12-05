@@ -25,4 +25,6 @@ jobs:
           file_to_bump: "./pyproject.toml"
           bump_type: "minor"
           main_branch: "master"
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTION_GITHUB_TOKEN }}    
 
