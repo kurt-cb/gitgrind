@@ -338,7 +338,7 @@ gitgrind -r * --condition "'username' in author and 'some feature' in message"
     else:
         logging.basicConfig(level=logging.WARNING, format="%(message)s")
 
-    logger = logging.getself.logger(__name__)
+    logger = logging.getLogger(__name__)
 
     # Create a dummy repository for demonstration if it doesn't exist
     repo_dir = "."
@@ -351,7 +351,7 @@ gitgrind -r * --condition "'username' in author and 'some feature' in message"
     grind = GitGrind(repo, details=args.details, verbose=args.verbose, logger=logger)
 
     # do the work
-    found = grind.grind(repo, args.condition, "logic")
+    found = grind.grind(args.find, "logic")
 
     # display the results
     for t, v in found.items():
@@ -363,7 +363,7 @@ gitgrind -r * --condition "'username' in author and 'some feature' in message"
                     f"{t}:  Commit ID: {commit.id}, Author: {commit.author} Message: {commit.message.strip()}"
                 )
 
-    sys.exit(0 if found.found_normal else 1)
+    sys.exit(0 if found['normal'] else 1)
 
 
 if __name__ == "__main__":
