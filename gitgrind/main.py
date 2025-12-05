@@ -8,8 +8,6 @@ import logging
 import re
 import sys
 
-global logger
-global args
 
 
 class GitGrind:
@@ -17,10 +15,11 @@ class GitGrind:
     Find
     """
 
-    def __init__(self, repo, details=False, verbose=False):
+    def __init__(self, repo, details=False, verbose=False, logger = logging.getLogger(__name__)):
         self.repo = repo
         self.details = details
         self.verbose = verbose
+        self.logger = logger
 
     def get_files_from_tree(repo, tree, path=""):
         """
@@ -62,7 +61,7 @@ class GitGrind:
             for patch in diff:
                 data2 = data.copy()
                 data2["files"] = [patch.delta.new_file.path, patch.delta.old_file.path]
-                if GitGrind.logic_match(expression, data2):
+                if self.logic_match(expression, data2):
                     for hunk in patch.hunks:
                         print(
                             f"@@ -{hunk.old_start},{hunk.old_lines} +{hunk.new_start},{hunk.new_lines} @@"
@@ -82,8 +81,7 @@ class GitGrind:
         except Exception as e:
             print(f"An error occurred: {e}")
 
-    @staticmethod
-    def logic_match(search_term, data):
+    def logic_match(self, search_term, data):
         """
         execute logic statement user specified and get the truth value
         """
@@ -92,16 +90,20 @@ class GitGrind:
             exec(cmd, globals(), data)
             result = data["result"]
         except SyntaxError as e:
-            logger.error(e)
-            logger.info("Command: %s\nVariables: %s\n", cmd, data)
+            self.logger.error(e)
+            self.logger.info("Command: %s\nVariables: %s\n", cmd, data)
             raise e
         return result
 
+
     def check_match(self, matching_commits, commit, search_term, search_by):
-        logger.debug(f"Commit %s - searchby %s", commit.id, search_by)
+        """
+        Run the user specified matching rules in the commit
+        """
+        self.logger.debug("Commit %s - searchby %s", commit.id, search_by)
 
         if not commit.parents:
-            logger.info(
+            self.logger.info(
                 f"Commit {commit.id} is the initial commit and has no parent to compare against."
             )
             return
@@ -116,14 +118,14 @@ class GitGrind:
         }
 
         if search_by == "logic":
-            logger.debug("check for match: %s %s", data, search_term)
+            self.logger.debug("check for match: %s %s", data, search_term)
             try:
 
                 result = self.logic_match(search_term, data)
             except BaseException as e:
-                logger.error(e)
+                self.logger.error(e)
             if result:
-                logger.debug("MATCH: %s %s", data, search_term)
+                self.logger.debug("MATCH: %s %s", data, search_term)
                 matching_commits.append(commit)
                 if self.details:
                     # result = subprocess.run(['git', 'show', '-p', commit.id], capture_output=True, text=True, check=True)
@@ -131,7 +133,7 @@ class GitGrind:
                     print(f"Changes for commit {commit.id}:")
                     self.show_commit_changes(diff, search_term, data)
             else:
-                logger.debug("Not a match: %s %s", data, search_term)
+                self.logger.debug("Not a match: %s %s", data, search_term)
 
         elif search_by == "message":
             if search_term.lower() in commit.message.lower():
@@ -179,6 +181,9 @@ class GitGrind:
 
     @staticmethod
     def isdupe(commit_id, found):
+        """
+        check for duplicate commits in already found commits
+        """
         for t, v in found.items():
             ids = [it.id for it in v]
             if commit_id in ids:
@@ -186,6 +191,9 @@ class GitGrind:
         return False
 
     def search_stash(self, matching_commits, repo, search_term, search_by, found):
+        """
+        Enumerate stashs to find commmits
+        """
         for stash_commit in repo.listall_stashes():
             if not GitGrind.isdupe(stash_commit.commit_id, found):
                 commit = repo.revparse_single(str(stash_commit.commit_id))
@@ -240,9 +248,12 @@ class GitGrind:
         return dangling_commits
 
     def search_dangle(self, matching_commits, repo, search_term, search_by, found):
+        """
+        search for dangling commits 
+        """
         dangling = GitGrind.find_dangling_commits(repo)
 
-        logger.info(f"Found {len(dangling)} dangling commits:")
+        self.logger.info(f"Found {len(dangling)} dangling commits:")
         for oid in dangling:
             commit = repo.revparse_single(str(oid))
             if not GitGrind.isdupe(commit.id, found):
@@ -253,20 +264,25 @@ class GitGrind:
                 commit = repo.revparse_single(str(stash_commit.commit_id))
                 self.check_match(matching_commits, commit, search_term, search_by)
 
-    def grind(self, repo, value, type):
-        found_normal = self.search_commits(repo, value, type)
+    def grind(self, value, _type):
+        """
+        Scans all commit types and returns segmented results
+        """
+        found_normal = self.search_commits(self.repo, value, _type)
         found_stash = []
         found_dangle = []
         found = {"normal": found_normal, "stash": found_stash, "dangle": found_dangle}
-        self.search_stash(found_stash, repo, value, type, found)
-        self.search_dangle(found_dangle, repo, value, type, found)
+        self.search_stash(found_stash, self.repo, value, _type, found)
+        self.search_dangle(found_dangle, self.repo, value, _type, found)
 
         found = {"normal": found_normal, "stash": found_stash, "dangle": found_dangle}
         return found
 
 
 def main_function():
-
+    """
+    for command line execution
+    """
     parser = argparse.ArgumentParser(
         prog="gitgrind",
         description="searches one or more repos for commits based on file content, author, commit msg",
@@ -322,7 +338,7 @@ gitgrind -r * --condition "'username' in author and 'some feature' in message"
     else:
         logging.basicConfig(level=logging.WARNING, format="%(message)s")
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getself.logger(__name__)
 
     # Create a dummy repository for demonstration if it doesn't exist
     repo_dir = "."
@@ -332,7 +348,7 @@ gitgrind -r * --condition "'username' in author and 'some feature' in message"
         print(f"Error opening repository: {e}")
         sys.exit(1)
 
-    grind = GitGrind(repo, args.details, args.verbose)
+    grind = GitGrind(repo, details=args.details, verbose=args.verbose, logger=logger)
 
     # do the work
     found = grind.grind(repo, args.condition, "logic")
@@ -348,3 +364,9 @@ gitgrind -r * --condition "'username' in author and 'some feature' in message"
                 )
 
     sys.exit(0 if found.found_normal else 1)
+
+
+if __name__ == "__main__":
+    # This block only executes when the script is run directly.
+    # It calls the main function to start the program's execution.
+    main_function()
