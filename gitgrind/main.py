@@ -89,9 +89,9 @@ class GitGrind:
             cmd = f"result={search_term}"
             exec(cmd, globals(), data)
             result = data["result"]
-        except SyntaxError as e:
+        except Exception as e:
             self.logger.error(e)
-            self.logger.info("Command: %s\nVariables: %s\n", cmd, data)
+            self.logger.error("Command: %s\nVariables: %s\nException: %s\n", cmd, data,e )
             raise e
         return result
 
@@ -111,7 +111,7 @@ class GitGrind:
         parent_commit = commit.parents[0]
         diff = self.repo.diff(parent_commit.tree, commit.tree)
         data = {
-            "message": commit.message.lower(),
+            "message": commit.message.lower().strip(),
             "author": commit.author.name.lower(),
             "email": commit.author.email.lower(),
             "files": [x for x in self.diff_files(diff)],
