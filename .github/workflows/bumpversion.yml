@@ -3,7 +3,7 @@ name: Bump version on PR
 on:
   pull_request:
     branches:
-      - main
+      - master
     paths:
       - 'gitgrind/**'
       - './pyproject.toml'
