@@ -3,6 +3,12 @@ name: Publish Python gitgrind dstribution to PyPI and TestPyPI
 on:
   release:
     types: [published]
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'gitgrind/**'
+      - './pyproject.toml'
 
 jobs:
   build:
