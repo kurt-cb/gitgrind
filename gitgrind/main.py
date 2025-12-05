@@ -15,7 +15,7 @@ class GitGrind:
     Find
     """
 
-    def __init__(self, repo, details=False, verbose=False, logger = logging.getLogger(__name__)):
+    def __init__(self, repo, details = False, verbose = False, logger = logging.getLogger(__name__)):
         self.repo = repo
         self.details = details
         self.verbose = verbose
