@@ -3,7 +3,7 @@ name: Publish Python gitgrind dstribution to PyPI and TestPyPI
 on:
   pull_request:
     branches:
-      - main
+      - master
     paths:
       - 'gitgrind/**'
       - './pyproject.toml'
