@@ -1,9 +1,9 @@
-name: Publish Python gitgrind dstribution to PyPI and TestPyPI
+name: Bump version on PR
 
 on:
   pull_request:
     branches:
-      - main
+      - master
     paths:
       - 'gitgrind/**'
       - './pyproject.toml'
@@ -24,6 +24,5 @@ jobs:
         with:
           file_to_bump: "./pyproject.toml"
           bump_type: "minor"
-          main_branch: "main"
-          python_version: "3.10"
+          main_branch: "master"
 
