@@ -22,26 +22,6 @@ class GitGrind:
         self.details = details
         self.verbose = verbose
 
-    def substitute(text, variables):
-        """
-        Replaces variables within parentheses in a string with their values from a dictionary.
-
-        Args:
-            text (str): The input string containing variables like (var_name).
-            variables (dict): A dictionary mapping variable names to their values.
-
-        Returns:
-            str: The string with variables replaced by their values.
-        """
-
-        def replacer(match):
-            var_name = match.group(1)  # Extract the variable name without parentheses
-            return str(
-                variables.get(var_name, match.group(0))
-            )  # Return value or original match if not found
-
-        return re.sub(r"\{(\w+)\}", replacer, text)
-
     def get_files_from_tree(repo, tree, path=""):
         """
         Recursively walks a pygit2 Tree object and yields all file paths.
@@ -64,6 +44,7 @@ class GitGrind:
                 # If it's a blob (a file), yield its path
                 yield entry_path
 
+    @staticmethod
     def diff_files(diff):
         for patch in diff:
             yield patch.delta.new_file.path
@@ -101,9 +82,10 @@ class GitGrind:
         except Exception as e:
             print(f"An error occurred: {e}")
 
+    @staticmethod
     def logic_match(search_term, data):
         """
-        Print information if there was a logic match
+        execute logic statement user specified and get the truth value
         """
         try:
             cmd = f"result={search_term}"
@@ -143,7 +125,7 @@ class GitGrind:
             if result:
                 logger.debug("MATCH: %s %s", data, search_term)
                 matching_commits.append(commit)
-                if args.details:
+                if self.details:
                     # result = subprocess.run(['git', 'show', '-p', commit.id], capture_output=True, text=True, check=True)
                     # print(result.stdout)
                     print(f"Changes for commit {commit.id}:")
@@ -164,7 +146,7 @@ class GitGrind:
             for file_path in self.get_files_from_tree(repo, commit.tree):
                 # Check if the entry is a blob (representing a file)
                 if search_term.lower() in file_path.lower():
-                    if args.details:
+                    if self.details:
                         # result = subprocess.run(['git', 'show', '-p', commit.id], capture_output=True, text=True, check=True)
                         # print(result.stdout)
                         self.show_commit_changes(diff, search_term, data)
