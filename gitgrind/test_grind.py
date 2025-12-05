@@ -21,6 +21,6 @@ class TestGitGrind(unittest.TestCase):
         print("Found: ", found)
         epoch = str(found['normal'][0].id)
         print("Epoch: ", epoch)
-        print("Message: ", found['normal'][0].messege)
+        print("Message: ", found['normal'][0].message)
         self.assertTrue(epoch == "939dd6bd244d6e37b397b40b36af2b1a7faac5db")
         
