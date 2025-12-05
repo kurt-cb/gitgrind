@@ -3,17 +3,20 @@ import pygit2
 import os
 import argparse
 import logging
-#import subprocess
+
+# import subprocess
 import re
 import sys
 
 global logger
 global args
 
+
 class GitGrind:
     """
-    Find 
+    Find
     """
+
     def __init__(self, repo, details=False, verbose=False):
         self.repo = repo
         self.details = details
@@ -30,12 +33,14 @@ class GitGrind:
         Returns:
             str: The string with variables replaced by their values.
         """
+
         def replacer(match):
             var_name = match.group(1)  # Extract the variable name without parentheses
-            return str(variables.get(var_name, match.group(0))) # Return value or original match if not found
+            return str(
+                variables.get(var_name, match.group(0))
+            )  # Return value or original match if not found
 
-        return re.sub(r'\{(\w+)\}', replacer, text)
-
+        return re.sub(r"\{(\w+)\}", replacer, text)
 
     def get_files_from_tree(repo, tree, path=""):
         """
@@ -75,15 +80,17 @@ class GitGrind:
 
             for patch in diff:
                 data2 = data.copy()
-                data2['files'] = [ patch.delta.new_file.path, patch.delta.old_file.path ]
+                data2["files"] = [patch.delta.new_file.path, patch.delta.old_file.path]
                 if GitGrind.logic_match(expression, data2):
                     for hunk in patch.hunks:
-                        print(f"@@ -{hunk.old_start},{hunk.old_lines} +{hunk.new_start},{hunk.new_lines} @@")
+                        print(
+                            f"@@ -{hunk.old_start},{hunk.old_lines} +{hunk.new_start},{hunk.new_lines} @@"
+                        )
                         for line in hunk.lines:
                             # 'origin' indicates the type of line (added, deleted, context)
-                            if line.origin == '+':#pygit2.GIT_DIFF_LINE_ADD:
+                            if line.origin == "+":  # pygit2.GIT_DIFF_LINE_ADD:
                                 print(f"+{line.content.strip()}")
-                            elif line.origin == '-':#pygit2.GIT_DIFF_LINE_DEL:
+                            elif line.origin == "-":  # pygit2.GIT_DIFF_LINE_DEL:
                                 print(f"-{line.content.strip()}")
                             else:  # Context line
                                 print(f" {line.content.strip()}")
@@ -91,18 +98,17 @@ class GitGrind:
                     if self.verbose:
                         print("changed ", patch.delta.new_file.path)
 
-
         except Exception as e:
             print(f"An error occurred: {e}")
 
     def logic_match(search_term, data):
-        """ 
+        """
         Print information if there was a logic match
         """
         try:
             cmd = f"result={search_term}"
             exec(cmd, globals(), data)
-            result = data['result']
+            result = data["result"]
         except SyntaxError as e:
             logger.error(e)
             logger.info("Command: %s\nVariables: %s\n", cmd, data)
@@ -113,19 +119,21 @@ class GitGrind:
         logger.debug(f"Commit %s - searchby %s", commit.id, search_by)
 
         if not commit.parents:
-            logger.info(f"Commit {commit.id} is the initial commit and has no parent to compare against.")
+            logger.info(
+                f"Commit {commit.id} is the initial commit and has no parent to compare against."
+            )
             return
 
         parent_commit = commit.parents[0]
         diff = self.repo.diff(parent_commit.tree, commit.tree)
         data = {
-            'message': commit.message.lower(),
-            'author': commit.author.name.lower(),
-            'email': commit.author.email.lower(),
-            'files': [x for x in self.diff_files(diff)]
+            "message": commit.message.lower(),
+            "author": commit.author.name.lower(),
+            "email": commit.author.email.lower(),
+            "files": [x for x in self.diff_files(diff)],
         }
 
-        if search_by == 'logic':
+        if search_by == "logic":
             logger.debug("check for match: %s %s", data, search_term)
             try:
 
@@ -136,27 +144,29 @@ class GitGrind:
                 logger.debug("MATCH: %s %s", data, search_term)
                 matching_commits.append(commit)
                 if args.details:
-                    #result = subprocess.run(['git', 'show', '-p', commit.id], capture_output=True, text=True, check=True)
-                    #print(result.stdout)
+                    # result = subprocess.run(['git', 'show', '-p', commit.id], capture_output=True, text=True, check=True)
+                    # print(result.stdout)
                     print(f"Changes for commit {commit.id}:")
                     self.show_commit_changes(diff, search_term, data)
             else:
                 logger.debug("Not a match: %s %s", data, search_term)
 
-        elif search_by == 'message':
+        elif search_by == "message":
             if search_term.lower() in commit.message.lower():
                 matching_commits.append(commit)
-        elif search_by == 'author':
-            if search_term.lower() in commit.author.name.lower() or \
-                search_term.lower() in commit.author.email.lower():
+        elif search_by == "author":
+            if (
+                search_term.lower() in commit.author.name.lower()
+                or search_term.lower() in commit.author.email.lower()
+            ):
                 matching_commits.append(commit)
-        elif search_by == 'file':
+        elif search_by == "file":
             for file_path in self.get_files_from_tree(repo, commit.tree):
                 # Check if the entry is a blob (representing a file)
                 if search_term.lower() in file_path.lower():
                     if args.details:
-                        #result = subprocess.run(['git', 'show', '-p', commit.id], capture_output=True, text=True, check=True)
-                        #print(result.stdout)
+                        # result = subprocess.run(['git', 'show', '-p', commit.id], capture_output=True, text=True, check=True)
+                        # print(result.stdout)
                         self.show_commit_changes(diff, search_term, data)
                     matching_commits.append(commit)
         else:
@@ -170,25 +180,24 @@ class GitGrind:
         Args:
             repo_path (str): The path to the Git repository.
             search_term (str): The string to search for.
-            search_by (str): 'message' to search in commit messages, 
+            search_by (str): 'message' to search in commit messages,
                             'author' to search in author names/emails.
-        
+
         Returns:
             list: A list of pygit2.Commit objects that match the search criteria.
         """
 
-
         matching_commits = []
         # Start walking from the HEAD of the repository
         head_commit_id = repo.head.target
-        
+
         for commit in repo.walk(head_commit_id, pygit2.GIT_SORT_TIME):
             self.check_match(matching_commits, commit, search_term, search_by)
         return matching_commits
 
     @staticmethod
     def isdupe(commit_id, found):
-        for t,v in found.items():
+        for t, v in found.items():
             ids = [it.id for it in v]
             if commit_id in ids:
                 return True
@@ -205,7 +214,7 @@ class GitGrind:
         """
         Finds and returns a list of Oids for dangling commits in a git repository.
         """
-        
+
         # 1. Collect all reachable objects
         reachable_objects = set()
 
@@ -244,7 +253,7 @@ class GitGrind:
                 if obj.type == pygit2.GIT_OBJECT_COMMIT:
                     dangling_commits.append(oid)
             except KeyError:
-                continue # Object might have been packed/garbage collected during iteration
+                continue  # Object might have been packed/garbage collected during iteration
 
         return dangling_commits
 
@@ -258,36 +267,28 @@ class GitGrind:
                 self.check_match(matching_commits, commit, search_term, search_by)
 
         for stash_commit in repo.listall_stashes():
-            if not GitGrind.isdupe(str(stash_commit.commit_id), found):       
+            if not GitGrind.isdupe(str(stash_commit.commit_id), found):
                 commit = repo.revparse_single(str(stash_commit.commit_id))
                 self.check_match(matching_commits, commit, search_term, search_by)
-
 
     def grind(self, repo, value, type):
         found_normal = self.search_commits(repo, value, type)
         found_stash = []
         found_dangle = []
-        found = {
-            'normal': found_normal,
-            'stash': found_stash,
-            'dangle': found_dangle
-            }
+        found = {"normal": found_normal, "stash": found_stash, "dangle": found_dangle}
         self.search_stash(found_stash, repo, value, type, found)
         self.search_dangle(found_dangle, repo, value, type, found)
 
-        found = {
-            'normal': found_normal,
-            'stash': found_stash,
-            'dangle': found_dangle
-            }
+        found = {"normal": found_normal, "stash": found_stash, "dangle": found_dangle}
         return found
+
 
 def main_function():
 
     parser = argparse.ArgumentParser(
-                    prog='gitgrind',
-                    description='searches one or more repos for commits based on file content, author, commit msg',
-                    epilog="""
+        prog="gitgrind",
+        description="searches one or more repos for commits based on file content, author, commit msg",
+        epilog="""
 
 Commit context variables:
 =========================
@@ -306,24 +307,43 @@ Example:
 gitgrind -r * --condition "'username' in author and 'some feature' in message"
 
 
-""")
+""",
+    )
 
-    parser.add_argument("-f", "--find", required=True,  help="quoted python condition statement using commit context variables")
-    parser.add_argument("-r", "--recursive", action="store_true", help="search subdirectories for repositories" )
-    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output")
-    parser.add_argument("-b", "--batch", action="store_true", help="show commit changes (diffs)")
-    parser.add_argument("-d", "--details", action="store_true", help="show commit changes (diffs)")
+    parser.add_argument(
+        "-f",
+        "--find",
+        required=True,
+        help="quoted python condition statement using commit context variables",
+    )
+    parser.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="search subdirectories for repositories",
+    )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="Enable verbose output"
+    )
+    parser.add_argument(
+        "-b", "--batch", action="store_true", help="show commit changes (diffs)"
+    )
+    parser.add_argument(
+        "-d", "--details", action="store_true", help="show commit changes (diffs)"
+    )
     args = parser.parse_args()
 
     if args.verbose:
-        logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')    
+        logging.basicConfig(
+            level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+        )
     else:
-        logging.basicConfig(level=logging.WARNING, format='%(message)s')
+        logging.basicConfig(level=logging.WARNING, format="%(message)s")
 
     logger = logging.getLogger(__name__)
 
     # Create a dummy repository for demonstration if it doesn't exist
-    repo_dir='.'
+    repo_dir = "."
     try:
         repo = pygit2.Repository(repo_dir)
     except pygit2.GitError as e:
@@ -336,13 +356,13 @@ gitgrind -r * --condition "'username' in author and 'some feature' in message"
     found = grind.grind(repo, args.condition, "logic")
 
     # display the results
-    for t,v in found.items():
+    for t, v in found.items():
         for commit in v:
             if args.batch:
                 print(commit.id)
             else:
-                print(f"{t}:  Commit ID: {commit.id}, Author: {commit.author} Message: {commit.message.strip()}")
-
+                print(
+                    f"{t}:  Commit ID: {commit.id}, Author: {commit.author} Message: {commit.message.strip()}"
+                )
 
     sys.exit(0 if found.found_normal else 1)
-
