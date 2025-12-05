@@ -145,7 +145,7 @@ class GitGrind:
             ):
                 matching_commits.append(commit)
         elif search_by == "file":
-            for file_path in self.get_files_from_tree(repo, commit.tree):
+            for file_path in self.get_files_from_tree(self.repo, commit.tree):
                 # Check if the entry is a blob (representing a file)
                 if search_term.lower() in file_path.lower():
                     if self.details:
