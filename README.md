@@ -21,7 +21,7 @@ files - list of files in the commit
 Usage
 -----
 Example of search in current directroy
-gitgrind -c "('myname' in author or 'myname' in email) and 'mydir/myfile.cpp' in files" 
+gitgrind -f "('myname' in author or 'myname' in email) and 'mydir/myfile.cpp' in files" 
 
 This will find any commits (dangling, in stash, or normal commits) and show the commit information
 
