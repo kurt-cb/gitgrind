@@ -164,17 +164,18 @@ class GitGrind:
         Args:
             repo_path (str): The path to the Git repository.
             search_term (str): The string to search for.
-            search_by (str): 'message' to search in commit messages,
+            search_by (str): 'message' to search in commit messages, 
                             'author' to search in author names/emails.
-
+        
         Returns:
             list: A list of pygit2.Commit objects that match the search criteria.
         """
 
+
         matching_commits = []
         # Start walking from the HEAD of the repository
         head_commit_id = repo.head.target
-
+        
         for commit in repo.walk(head_commit_id, pygit2.GIT_SORT_TIME):
             self.check_match(matching_commits, commit, search_term, search_by)
         return matching_commits
