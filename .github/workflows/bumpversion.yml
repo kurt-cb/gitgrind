@@ -1,4 +1,4 @@
-name: Publish Python gitgrind dstribution to PyPI and TestPyPI
+name: Bump version on PR
 
 on:
   pull_request:
