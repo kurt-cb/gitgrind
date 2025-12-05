@@ -1,5 +1,5 @@
 import unittest
-from main import GitGrind
+from gitgrind import main
 
 class TestGitGrind(unittest.TestCase):
     def test_blank(self):
