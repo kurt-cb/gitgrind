@@ -25,5 +25,4 @@ jobs:
           file_to_bump: "./pyproject.toml"
           bump_type: "minor"
           main_branch: "master"
-          python_version: "3.10"
 
